@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>openui5-rap-helper</title>
+		<script id="sap-ui-bootstrap"
+			src="resources/sap-ui-core.js"
+			data-sap-ui-theme="sap_fiori_3"
+			data-sap-ui-resourceroots='{"openui5-rap-helper.openui5-rap-helper": "./"}'
+			data-sap-ui-compatVersion="edge"
+			data-sap-ui-oninit="module:sap/ui/core/ComponentSupport"
+			data-sap-ui-async="true"
+			data-sap-ui-frameOptions="trusted">
+		</script>
+		
+		<script>
+		sap.ui.getCore().attachInit(function () {
+			sap.ui.require(
+			[
+				"sap/ui/thirdparty/jqueryui/jquery-ui-core",
+				"sap/ui/thirdparty/jqueryui/jquery-ui-widget",
+				"sap/ui/thirdparty/jqueryui/jquery-ui-mouse",
+				"sap/ui/thirdparty/jqueryui/jquery-ui-draggable",
+				"sap/ui/thirdparty/jqueryui/jquery-ui-droppable",
+				"sap/ui/thirdparty/jqueryui/jquery-ui-sortable"
+			]
+		});
+	</script>
+	</head>
+	<body class="sapUiBody">
+		<div data-sap-ui-component data-name="openui5-rap-helper.openui5-rap-helper" data-id="container" data-settings='{"id" : "openui5-rap-helper"}'></div>
+	</body>
+</html>
