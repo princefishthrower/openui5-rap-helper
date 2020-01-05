@@ -6,7 +6,6 @@
 					<Panel>
 						<content>
 							<ScrollContainer vertical="true" horizontal="false" id="lyricsContainer">
-								<List id="enteredLines" mode="Delete" noDataText="Write a line..." delete="deleteLine"/>	
 							</ScrollContainer>
 							<layout:Grid>
 							<Input value="{/textContent}" placeholder="Write your line here..." liveChange="liveInputChange" valueLiveUpdate="true" id="textInput">
@@ -67,7 +66,8 @@
 				<footer>
 					<OverflowToolbar id="otbFooter">
 						<ToolbarSpacer/>
-						<Button text="Written by Christopher Frewin © 2016. Rhyme results are provided by http://rhymebrain.com" enabled="false"/>
+						<Button text="Written by Christopher Frewin © 2020. Rhyme results are provided by RhymeBrain © 2020, http://rhymebrain.com" enabled="false"/>
+						<Button text="Powered by SAPUI5" enabled="false"/>
 						<Button icon="sap-icon://sap-ui5" enabled="false"/>
 					</OverflowToolbar>
 				</footer>
