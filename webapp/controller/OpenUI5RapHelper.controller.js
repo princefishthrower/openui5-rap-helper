@@ -247,11 +247,11 @@ sap.ui.define([
 
 			oDialog.open();
 			
-			
+			// a bit of focus work to ensure that the cursor is at the end of the input
 			oInput.focus();
-			var sValue = oInput.getValue(); //store the value of the element
-			oInput.setValue(''); //clear the value of the element
-			oInput.setValue(sValue); //set that value back.  
+			var sValue = oInput.getValue();
+			oInput.setValue('');
+			oInput.setValue(sValue); 
 		},
 
 		deleteLine: function (oEvent) {
