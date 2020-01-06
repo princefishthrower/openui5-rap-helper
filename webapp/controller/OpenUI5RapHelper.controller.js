@@ -31,7 +31,7 @@ sap.ui.define([
 			sap.ui.getCore().setModel(oJSONModel, "rhymes");
 
 			var that = this;
-			
+
 			// on enter listener function for the text input 
 			this.getView().byId("textInput").onsapenter = function (e) {
 				that.addLine();
@@ -44,10 +44,7 @@ sap.ui.define([
 			this.getView().byId("userSyllable").onsapenter = function (e) {
 				that.userSyllable();
 			};
-			// TODO: add on enter here for the modal text field
-			
-			var oEventBus = sap.ui.getCore().getEventBus();
-			oEventBus.subscribe("RapHelper", "liveInputEditChange", this.liveInputEditChange, this);
+
 		},
 		onAfterRendering: function () {
 			// set models to various view elements
@@ -67,16 +64,16 @@ sap.ui.define([
 			this.getView().byId("textMultiInput").addValidator(function (args) {
 				that.addLineFromValidator(args.txt);
 			});
-			
+
 			// add list to scrollcontainer
 			// more and more bugs
 			var oScrollContainer = oView.byId("lyricsContainer");
 			var oList = new sap.m.List("enteredLines", {
 				mode: "Delete",
-	        	noDataText: "Fresh lyrics you write will appear here...",
-	        	delete: this.deleteLine
-	        });
-	        oScrollContainer.addContent(oList);
+				noDataText: "Fresh lyrics you write will appear here...",
+				delete: this.deleteLine
+			});
+			oScrollContainer.addContent(oList);
 		},
 		liveInputChange: function () { // changes the syllable count in the edit Input while the user types, also adds green or red depending on matching of syllables
 			var iLength = this.syllableCount(sap.ui.getCore().getModel("enteredText").getProperty("/textContent")); // call syllable count function passing the bound value from our model
@@ -126,16 +123,16 @@ sap.ui.define([
 		addLine: function () {
 			var sTextContent = sap.ui.getCore().getModel("enteredText").getProperty("/textContent");
 			var sLength = sap.ui.getCore().getModel("enteredText").getProperty("/textLength").toString();
-			
+
 			// getting the rhyme the user needs to rhyme with
 			var sLastRhyme = sTextContent.split(" ").splice(-1);
 			this.getRhymes(sLastRhyme);
-			
+
 			// clear the text value
-			sap.ui.getCore().getModel("enteredText").setProperty("/textContent", ""); 
-			
+			sap.ui.getCore().getModel("enteredText").setProperty("/textContent", "");
+
 			// reset the syllable number
-			sap.ui.getCore().getModel("enteredText").setProperty("/textLength", 0); 
+			sap.ui.getCore().getModel("enteredText").setProperty("/textLength", 0);
 			var oText = this.getView().byId("syllableText");
 			if (oText.hasStyleClass("green")) {
 				oText.removeStyleClass("green");
@@ -143,9 +140,12 @@ sap.ui.define([
 			}
 
 			// create standard list item
+			var that = this;
 			var oStandardListItem = new sap.m.StandardListItem({
 				type: "Active",
-				press: this.editLine,
+				press: function (oEvent) {
+					that.editLine(oEvent, that);
+				},
 				title: sTextContent,
 				info: "(Syllables: " + sLength + ")"
 			});
@@ -177,26 +177,23 @@ sap.ui.define([
 			oList.addItem(oStandardListItem);
 			this.getView().byId("textMultiInput").setValue("");
 		},
-		
-		editLine: function (oEvent) { // creates an input line below the parent line for the user to edit
-			console.log('here bitch');
-			console.log(oEvent);
+
+		// creates an input modal so the user can edit a previously written lines
+		editLine: function (oEvent, oController) {
 			var oStandardListItem = oEvent.getSource();
 			var oEditContentModel = sap.ui.getCore().getModel("enteredText");
-			
+
 			// get text of the line they want to edit (which in this case is technically the 'title' of the StandardListItem)
 			var sText = oStandardListItem.getTitle();
-			
+
 			// bind that text to the editContent property of teh model
-			// TODO: find how to get the right 'this' in the live change context... this is already inside a oEven function
 			oEditContentModel.setProperty("/editContent", sText);
-			var oEventBus = sap.ui.getCore().getEventBus();
-			var oInput = new sap.m.Input({
+			var oInput = new sap.m.Input("modalInput", {
 				value: "{/editContent}",
 				valueLiveUpdate: true,
-				liveChange: function() {
+				liveChange: function () {
 					// Update the syllable count as they edit
-					oEventBus.publish("RapHelper", "liveInputEditChange");
+					oController.liveInputEditChange();
 				}
 			});
 			oInput.setLayoutData(new sap.ui.layout.GridData({
@@ -237,12 +234,26 @@ sap.ui.define([
 				}
 			});
 
+			// make sure to attach this on enter function
+			sap.ui.getCore().byId("modalInput").onsapenter = function (e) {
+				var sEditedContent = sap.ui.getCore().getModel("enteredText").getProperty("/editContent");
+				oStandardListItem.setTitle(sEditedContent);
+				oDialog.close();
+			};
+
+
+			// update syllable count so it is correct
+			oController.liveInputEditChange();
+
 			oDialog.open();
 			
-			// update syllable count so it is correct
-			oEventBus.publish("RapHelper", "liveInputEditChange"); 
+			
+			oInput.focus();
+			var sValue = oInput.getValue(); //store the value of the element
+			oInput.setValue(''); //clear the value of the element
+			oInput.setValue(sValue); //set that value back.  
 		},
-		
+
 		deleteLine: function (oEvent) {
 			var oList = oEvent.getSource();
 			var oItem = oEvent.getParameter("listItem");
@@ -262,14 +273,14 @@ sap.ui.define([
 				}).disableSelection();
 			});
 		},
-		
+
 		getRhymes: function (sWord) {
 			// Rhyme API URL root
 			var sURL = "https://rhymebrain.com/talk?function=getRhymes&word=";
-			
+
 			// set the word in the combobox to this word
-			sap.ui.getCore().getModel("rhymes").setProperty("/lastRhyme", sWord); 
-			
+			sap.ui.getCore().getModel("rhymes").setProperty("/lastRhyme", sWord);
+
 			// make AJAX call
 			$.ajax({
 				url: sURL + sWord,
@@ -279,13 +290,13 @@ sap.ui.define([
 				}
 			});
 		},
-		
+
 		userRhyme: function () {
 			var sUserRhyme = sap.ui.getCore().getModel("rhymes").getProperty("/userRhyme");
 			console.log(sUserRhyme);
 			this.getRhymes(sUserRhyme);
 		},
-		
+
 		userSyllable: function () {
 			var iUserSyllable = sap.ui.getCore().getModel("rhymes").getProperty("/userSyllable");
 			var sUserSyllable = iUserSyllable.toString();
@@ -295,7 +306,7 @@ sap.ui.define([
 			var oFilter = new sap.ui.model.Filter("syllables", sap.ui.model.FilterOperator.EQ, sUserSyllable);
 			oBinding.filter([oFilter]);
 		},
-		
+
 		save: function () {
 			var oContent = sap.ui.getCore().byId("enteredLines").getItems();
 			var sText = "";
@@ -312,7 +323,7 @@ sap.ui.define([
 				link.click();
 			}
 		},
-		
+
 		saveNoAnno: function () {
 			var oContent = sap.ui.getCore().byId("enteredLines").getItems();
 			var sText = "";
@@ -328,7 +339,7 @@ sap.ui.define([
 				link.click();
 			}
 		},
-		
+
 		autoScroll: function () {
 			var oContent = sap.ui.getCore().byId("enteredLines").getItems();
 			var iLength = oContent.length * 36; // total height of content
@@ -338,7 +349,7 @@ sap.ui.define([
 			//var oElement = oContent[oContent.length - 1];
 			this.getView().byId("lyricsContainer").scrollTo(0, iLength, iTime);
 		},
-		
+
 		deleteAll: function () {
 			sap.ui.getCore().byId("enteredLines").destroyItems();
 			var oText = this.getView().byId("syllableText");
