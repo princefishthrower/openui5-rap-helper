@@ -67,7 +67,7 @@
 					<OverflowToolbar id="otbFooter">
 						<ToolbarSpacer/>
 						<Button text="Written by Christopher Frewin © 2020. Rhyme results are provided by RhymeBrain © 2020, http://rhymebrain.com" enabled="false"/>
-						<Button text="Powered by SAPUI5" enabled="false"/>
+						<Button text="App Powered by SAPUI5" enabled="false"/>
 						<Button icon="sap-icon://sap-ui5" enabled="false"/>
 					</OverflowToolbar>
 				</footer>
