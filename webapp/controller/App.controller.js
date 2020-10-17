@@ -1,18 +1,16 @@
 sap.ui.define([
 	"sap/ui/core/mvc/Controller",
 	"sap/ui/model/json/JSONModel",
-	"sap/ui/core/format/DateFormat",
 	"sap/m/Button",
 	"sap/m/Dialog",
-	"sap/m/Text",
-	"sap/m/ButtonType"
-], function (Controller, JSONModel, DateFormat, Button, Dialog, Text, ButtonType) {
+], function(Controller, JSONModel, Button, Dialog) {
 	"use strict";
 
-	return Controller.extend("openui5-rap-helper.openui5-rap-helper.controller.OpenUI5RapHelper", {
+	return Controller.extend("sap.ui.demo.todo.controller.App", {
 
 		onInit: function () {
 			var oEnteredTextJSON = {
+				title: "",
 				textContent: "",
 				textLength: 0,
 				editContent: "",
@@ -24,22 +22,28 @@ sap.ui.define([
 			// rhymes finding model
 			var oJSONModel = new JSONModel({
 				rhymeList: [],
-				lastRhyme: "[write a line]",
-				userRhyme: "",
+				lastRhyme: "incognito",
 				userSyllable: null
 			});
 			sap.ui.getCore().setModel(oJSONModel, "rhymes");
 
 			var that = this;
 
-			// on enter listener function for the text input 
-			this.getView().byId("textInput").onsapenter = function (e) {
+			// on enter listener function for title input
+			this.getView().byId("titleInput").onsapenter = function (e) {
+				that.setTitle();
+			};
+
+			// on enter listener function for the text input
+			this.getView().byId("textMultiInput").onsapenter = function (e) {
 				that.addLine();
 			};
-			// on enter listener function for the user rhyme
-			this.getView().byId("userRhyme").onsapenter = function (e) {
+
+			// on enter listener function for the combo box
+			this.getView().byId("rhymesComboBox").onsapenter = function (e) {
 				that.userRhyme();
 			};
+
 			// on enter listener function for the user syllable restrict
 			this.getView().byId("userSyllable").onsapenter = function (e) {
 				that.userSyllable();
@@ -54,15 +58,14 @@ sap.ui.define([
 			var oComboBox = oView.byId("rhymesComboBox");
 			var oRhymesModel = sap.ui.getCore().getModel("rhymes");
 			oComboBox.setModel(oRhymesModel);
-			var oRhymeInput = oView.byId("userRhyme");
-			oRhymeInput.setModel(oRhymesModel);
 			var oSyllableInput = oView.byId("userSyllable");
 			oSyllableInput.setModel(oRhymesModel);
 
 			// token validator for multiinput
 			var that = this;
 			this.getView().byId("textMultiInput").addValidator(function (args) {
-				that.addLineFromValidator(args.txt);
+				console.log(args)
+				that.addLineFromValidator(args.text);
 			});
 
 			// add list to scrollcontainer
@@ -70,14 +73,32 @@ sap.ui.define([
 			var oScrollContainer = oView.byId("lyricsContainer");
 			var oList = new sap.m.List("enteredLines", {
 				mode: "Delete",
-				noDataText: "Fresh lyrics you write will appear here...",
-				delete: this.deleteLine
+				noDataText: "Fresh lines you write will appear here...",
 			});
+			oList.attachDelete(this.deleteLine, this)
 			oScrollContainer.addContent(oList);
+			this.getRhymes("incognito");
+			this.getView().byId("rhymesComboBox").setValue("incognito");
 		},
-		liveInputChange: function () { // changes the syllable count in the edit Input while the user types, also adds green or red depending on matching of syllables
-			var iLength = this.syllableCount(sap.ui.getCore().getModel("enteredText").getProperty("/textContent")); // call syllable count function passing the bound value from our model
+
+		// getting the rhyme the user needs to rhyme with - its the last word in the text input!
+		setLastRhyme: function(sTextContent) {
+			var sLastRhyme = sTextContent.split(" ").splice(-1);
+
+			this.getView().byId("rhymesComboBox").setValue(sLastRhyme);
+			// now get the rhymes as well
+			this.getRhymes(sLastRhyme);
+		},
+
+		// changes the syllable count in the edit Input while the user types, also adds green or red depending on matching of syllables
+		liveInputChange: function() {
+			console.log('in here!')
+			var sTextContent = sap.ui.getCore().getModel("enteredText").getProperty("/textContent");
+			var iLength = this.syllableCount(sTextContent); // call syllable count function passing the bound value from our model
 			sap.ui.getCore().getModel("enteredText").setProperty("/textLength", iLength);
+
+
+
 			var oContent = sap.ui.getCore().byId("enteredLines").getItems();
 			if (oContent.length === 0) {
 				return; // this means no previous line, we can't change the color
@@ -98,6 +119,7 @@ sap.ui.define([
 				}
 			}
 		},
+
 		liveInputEditChange: function () { // changes the syllable count in the edit Input while the user types
 			var iLength = this.syllableCount(sap.ui.getCore().getModel("enteredText").getProperty("/editContent")); // call syllable count function passing the bound value from our model
 			sap.ui.getCore().getModel("enteredText").setProperty("/editLength", iLength);
@@ -124,9 +146,7 @@ sap.ui.define([
 			var sTextContent = sap.ui.getCore().getModel("enteredText").getProperty("/textContent");
 			var sLength = sap.ui.getCore().getModel("enteredText").getProperty("/textLength").toString();
 
-			// getting the rhyme the user needs to rhyme with
-			var sLastRhyme = sTextContent.split(" ").splice(-1);
-			this.getRhymes(sLastRhyme);
+			this.setLastRhyme(sTextContent);
 
 			// clear the text value
 			sap.ui.getCore().getModel("enteredText").setProperty("/textContent", "");
@@ -154,16 +174,9 @@ sap.ui.define([
 			oList.addItem(oStandardListItem);
 
 			// add the drag and drop functionality to the list (call every time because of new items added)
-			var sId = oList.getId()
-			var sUlId = "#" + sId + "-listUl";
-			$(document).ready(function () {
-				$(sUlId).addClass("ui-sortable")
-				$(sUlId).sortable({
-					connectWith: ".ui-sortable"
-				}).disableSelection();
-			});
-
+			this.addDragAndDrop(oList);
 		},
+
 		addLineFromValidator: function (sText) {
 			// create standard list item
 			var sLength = this.syllableCount(sText);
@@ -192,7 +205,7 @@ sap.ui.define([
 				value: "{/editContent}",
 				valueLiveUpdate: true,
 				liveChange: function () {
-					// Update the syllable count as they edit
+					// Update the syllable count and last rhyme as they write in the input
 					oController.liveInputEditChange();
 				}
 			});
@@ -210,7 +223,7 @@ sap.ui.define([
 			oText.setModel(oEditContentModel);
 
 			var oDialog = new Dialog({
-				title: 'Edit your fresh lyric!',
+				title: 'Edit your fresh line!',
 				type: 'Message',
 				content: [oInput, oText],
 				beginButton: new Button({
@@ -241,29 +254,19 @@ sap.ui.define([
 				oDialog.close();
 			};
 
-
 			// update syllable count so it is correct
 			oController.liveInputEditChange();
 
 			oDialog.open();
-			
+
 			// a bit of focus work to ensure that the cursor is at the end of the input
 			oInput.focus();
 			var sValue = oInput.getValue();
 			oInput.setValue('');
-			oInput.setValue(sValue); 
+			oInput.setValue(sValue);
 		},
 
-		deleteLine: function (oEvent) {
-			var oList = oEvent.getSource();
-			var oItem = oEvent.getParameter("listItem");
-			oItem.destroy();
-			var oContent = sap.ui.getCore().byId("enteredLines").getItems();
-			var sLastRhyme = oContent[oContent.length - 1].getTitle().split(" ").splice(-1);
-			sap.ui.getCore().getModel("rhymes").setProperty("/lastRhyme", sLastRhyme); // set the rhyme to the last word of the last list item in the list
-			this.getRhymes(sLastRhyme);
-
-			// add the drag and drop functionality to the list (call every time because of new items added)
+		addDragAndDrop: function(oList) {
 			var sId = oList.getId()
 			var sUlId = "#" + sId + "-listUl";
 			$(document).ready(function () {
@@ -271,10 +274,23 @@ sap.ui.define([
 				$(sUlId).sortable({
 					connectWith: ".ui-sortable"
 				}).disableSelection();
-			});
+			})
 		},
 
-		getRhymes: function (sWord) {
+		deleteLine: function (oEvent) {
+			var oList = oEvent.getSource();
+			var oItem = oEvent.getParameter("listItem");
+			oItem.destroy();
+			var oContent = sap.ui.getCore().byId("enteredLines").getItems();
+			if (oContent.length > 0) {
+				this.setLastRhyme(oContent[oContent.length - 1].getTitle())
+			}
+
+			// add the drag and drop functionality to the list (call every time because of new items added)
+			this.addDragAndDrop(oList);
+		},
+
+		getRhymes: function (sWord, oComboBox) {
 			// Rhyme API URL root
 			var sURL = "https://rhymebrain.com/talk?function=getRhymes&word=";
 
@@ -287,14 +303,19 @@ sap.ui.define([
 				type: "GET",
 				success: function (data) {
 					sap.ui.getCore().getModel("rhymes").setProperty("/rhymeList", data);
+					if (oComboBox) {
+						oComboBox.setOpen(true);
+					}
 				}
 			});
 		},
 
 		userRhyme: function () {
-			var sUserRhyme = sap.ui.getCore().getModel("rhymes").getProperty("/userRhyme");
-			console.log(sUserRhyme);
-			this.getRhymes(sUserRhyme);
+			var oView = this.getView();
+			var oComboBox = oView.byId("rhymesComboBox");
+			var sUserRhymeValue = oComboBox.getValue();
+			this.getRhymes(sUserRhymeValue, oComboBox);
+
 		},
 
 		userSyllable: function () {
@@ -350,6 +371,38 @@ sap.ui.define([
 			this.getView().byId("lyricsContainer").scrollTo(0, iLength, iTime);
 		},
 
+		onDeleteAll: function() {
+			var oText = new sap.m.Text("deleteAllEnsureText", {
+				text: "Are you sure you want to delete ALL the lines of your fresh rap?"
+			});
+
+			var that = this;
+			var oDialog = new Dialog({
+				title: 'Really delete all?',
+				type: 'Message',
+				content: [oText],
+				beginButton: new Button({
+					icon: "sap-icon://accept",
+					text: 'Yes',
+					press: function () {
+						that.deleteAll();
+						oDialog.close();
+					}
+				}),
+				endButton: new Button({
+					icon: "sap-icon://sys-cancel",
+					text: 'Cancel',
+					press: function () {
+						oDialog.close();
+					}
+				}),
+				afterClose: function () {
+					oDialog.destroy();
+				}
+			});
+			oDialog.open();
+		},
+
 		deleteAll: function () {
 			sap.ui.getCore().byId("enteredLines").destroyItems();
 			var oText = this.getView().byId("syllableText");
@@ -359,4 +412,5 @@ sap.ui.define([
 			}
 		}
 	});
+
 });

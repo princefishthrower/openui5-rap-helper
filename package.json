@@ -1,18 +1,19 @@
 {
-  "name": "openui5-rap-helper",
-  "version": "0.0.1",
-  "description": "",
-  "private": true,
-  "devDependencies": {
-    "@ui5/cli": "1.7.0",
-    "@sap/ui5-builder-webide-extension": "1.0.9"
-  },
-  "scripts": {
-    "build": "ui5 build --include-task=generateManifestBundle generateCachebusterInfo"
-  },
-  "ui5": {
-    "dependencies": [
-      "@sap/ui5-builder-webide-extension"
-    ]
-  }
+	"name": "openui5-rap-helper",
+	"version": "0.2.0",
+	"description": "OpenUI5 Rap Helper",
+	"private": true,
+	"scripts": {
+		"start": "ui5 serve",
+		"build": "ui5 build -a --clean-dest",
+		"build-self-contained": "ui5 build self-contained -a --clean-dest",
+		"serve-dist": "ws --compress -d dist"
+	},
+	"dependencies": {},
+	"devDependencies": {
+		"@ui5/cli": "^2.4.5",
+		"eslint": "^7.11.0",
+		"local-web-server": "^4.2.1",
+		"rimraf": "^3.0.2"
+	}
 }
