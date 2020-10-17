@@ -7,7 +7,7 @@
 		"start": "ui5 serve",
 		"build": "ui5 build -a --clean-dest",
 		"build-self-contained": "ui5 build self-contained -a --clean-dest",
-		"serve-dist": "ws --compress -d dist"
+		"serve-dist": "ws --compress -d dist -p 9007"
 	},
 	"dependencies": {},
 	"devDependencies": {
