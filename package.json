@@ -7,9 +7,13 @@
 		"start": "ui5 serve",
 		"build": "ui5 build -a --clean-dest",
 		"build-self-contained": "ui5 build self-contained -a --clean-dest",
-		"serve-dist": "ws --compress -d dist -p 9007"
+		"serve-dist": "node index.js"
 	},
-	"dependencies": {},
+	"dependencies": {
+		"cors": "^2.8.5",
+		"express": "^4.17.1",
+		"express-static-gzip": "^2.0.8"
+	},
 	"devDependencies": {
 		"@ui5/cli": "^2.4.5",
 		"eslint": "^7.11.0",
