@@ -7,7 +7,9 @@
 		"start": "ui5 serve",
 		"build": "ui5 build -a --clean-dest",
 		"build-self-contained": "ui5 build self-contained -a --clean-dest",
-		"serve-dist": "node index.js"
+		"serve-dist": "node index.js",
+		"predeploy": "npm run build",
+		"deploy": "gh-pages -d dist"
 	},
 	"dependencies": {
 		"cors": "^2.8.5",
@@ -17,6 +19,7 @@
 	"devDependencies": {
 		"@ui5/cli": "^2.4.5",
 		"eslint": "^7.11.0",
+		"gh-pages": "^3.1.0",
 		"local-web-server": "^4.2.1",
 		"rimraf": "^3.0.2"
 	}
